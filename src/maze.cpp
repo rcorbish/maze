@@ -128,7 +128,7 @@ vector<vector<int>> Maze::buildCubesFromGraph() const {
 
 bool Maze::isWallInFront( const Direction facing, const int m, const int n ) const {
 
-    int cube = cubes[m][n] ;  // where are the paths in the maze ?
+    int cube = (m<M && n<N) ? cubes[m][n] : 0 ;  // where are the paths in the maze ?
 
     bool rc = false ;
     switch (facing)

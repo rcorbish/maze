@@ -1,6 +1,7 @@
 
 
 #include <stdio.h>
+#include <vector>
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/freeglut_std.h>
@@ -30,18 +31,21 @@ GLuint EBO;
 unsigned int vertexShader;
 unsigned int fragmentShader;
 unsigned int shaderProgram;
+
 float vertices[] = {
-    -.5, -.5, .75,
-     .5, -.5, .75,
-     .5,  .5, .75,
-    -.5,  .5, .75
-} ;
+      0.0,  0.0,  0.0,  
+      0.0, 10.0,  0.0,  
+     10.0,  0.0,  0.0,  
+     10.0, 10.0,  0.0,  
+};
+
 
 unsigned short indices[] = {  
-    0, 1, 2,   // first triangle
-    0, 2, 3    // second triangle
+    1, 0, 3,   // first triangle
+    3, 0, 2    // second triangle    
 };  
 
+int numberOfWalls = 0 ;
 
 void initTriangles() {
 
@@ -49,19 +53,121 @@ void initTriangles() {
     "layout (location = 0) in vec3 aPos;\n"
     "uniform mat4 uProjection;\n"
     "uniform mat4 uView;\n"
+    "out vec4 vColor;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = uProjection * uView * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   vColor = vec4( aPos.x/100.f, aPos.y/100.f, aPos.z/100.f, 1.0);\n"
     "}";
 
     const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
+    "out vec4 vFragColor;\n"
+    "in vec4 vColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.75f, 0.2f, 1.0f);\n"
+    "   vFragColor = vColor;\n"
     "}";
 
 
+    // array of a 2 vertices at each corner of grid
+    // 1 at floor level and 1 at ceiling
+    vector<float> allVertices;  
+    allVertices.reserve( (maze->M+1) * (maze->N+1) * 6 );
+
+    for( int m=0 ; m<=maze->M ; m++ ) {
+        for( int n=0 ; n<=maze->N ; n++ ) {
+            allVertices.push_back( 10.f*n ) ;   // x
+            allVertices.push_back( 0.f ) ;      // y
+            allVertices.push_back( 10.f*m ) ;   // z
+
+            allVertices.push_back( 10.f*n ) ;   // x
+            allVertices.push_back( 10.f ) ;     // y
+            allVertices.push_back( 10.f*m ) ;   // z
+        }
+    }
+
+    //
+    //   Defines points for East-West wall and North-South wall
+    //
+    //      x .. E
+    //      .
+    //      .
+    //      S
+    //
+     vector<unsigned short> allIndices;      
+    allIndices.reserve( (maze->M) * (maze->N) * 12 ); // max number of walls
+
+    numberOfWalls = 0 ;
+    unsigned short row_length = 2 * (maze->N+1) ;
+
+    for( unsigned short m=0 ; m<maze->M ; m++ ) {
+        for( unsigned short n=0 ; n<maze->N ; n++ ) {
+         
+            unsigned short x0 = m * row_length + n*2 ;
+            unsigned short x1 = x0 + 2 ;
+            unsigned short x2 = x0 + row_length ;
+
+            if( maze->isWallInFront( North, m, n ) ) {
+                allIndices.push_back( x0+1 ) ;
+                allIndices.push_back( x0 ) ;
+                allIndices.push_back( x1+1 ) ;
+                allIndices.push_back( x1 ) ;
+                allIndices.push_back( x0 ) ;
+                allIndices.push_back( x1+1 ) ;
+                numberOfWalls++ ;
+            }
+            
+            if( maze->isWallInFront( West, m, n ) ) {
+                allIndices.push_back( x0 ) ;
+                allIndices.push_back( x0+1 ) ;
+                allIndices.push_back( x2 ) ;
+                allIndices.push_back( x2 ) ;
+                allIndices.push_back( x0+1 ) ;
+                allIndices.push_back( x2+1 ) ;
+                numberOfWalls++ ;
+            }
+            
+            // goto quick_exit ;
+        }
+    }
+
+    for( unsigned short m=0 ; m<maze->M ; m++ ) {
+        int n = maze->N ;         
+        unsigned short x0 = m * row_length + n*2 ;
+        unsigned short x1 = x0 + 2 ;
+        unsigned short x2 = x0 + row_length ;
+
+        if( maze->isWallInFront( West, m, n ) ) {
+            allIndices.push_back( x0 ) ;
+            allIndices.push_back( x0+1 ) ;
+            allIndices.push_back( x2 ) ;
+            allIndices.push_back( x2 ) ;
+            allIndices.push_back( x0+1 ) ;
+            allIndices.push_back( x2+1 ) ;
+            numberOfWalls++ ;
+        }
+    }
+
+
+    for( unsigned short n=0 ; n<maze->N ; n++ ) {
+        int m = maze->M ;
+        unsigned short x0 = m * row_length + n*2 ;
+        unsigned short x1 = x0 + 2 ;
+        unsigned short x2 = x0 + row_length ;
+
+        if( maze->isWallInFront( North, m, n ) ) {
+            allIndices.push_back( x0+1 ) ;
+            allIndices.push_back( x0 ) ;
+            allIndices.push_back( x1+1 ) ;
+            allIndices.push_back( x1 ) ;
+            allIndices.push_back( x0 ) ;
+            allIndices.push_back( x1+1 ) ;
+            numberOfWalls++ ;
+        }            
+    }
+
+
+quick_exit:
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
@@ -98,11 +204,14 @@ void initTriangles() {
 
     glGenBuffers( 1, &VBO ) ;
     glBindBuffer( GL_ARRAY_BUFFER, VBO ) ;
-    glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW ) ;
+    glBufferData( GL_ARRAY_BUFFER, sizeof(float) * allVertices.size(), allVertices.data(), GL_STATIC_DRAW ) ;
 
     glGenBuffers( 1, &EBO );
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-    glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW );
+    // glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * allIndices.size(), allIndices.data(), GL_STATIC_DRAW );
+
+    setCameraPosition();
 }
 
 
@@ -125,41 +234,11 @@ void display() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    if( player->isWallInFront( *maze ) ) {
-        glDrawElements(GL_TRIANGLES, 6,  GL_UNSIGNED_SHORT, 0);
-    }
+    glDrawElements(GL_TRIANGLES, 6*numberOfWalls,  GL_UNSIGNED_SHORT, 0);
 
     glutSwapBuffers();
 }
 
-
-void drawText() {
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    int w = glutGet(GLUT_WINDOW_WIDTH);
-    int h = glutGet(GLUT_WINDOW_HEIGHT);
-    glOrtho(0, w, 0, h, -1, 1);
-
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    // 1st draw the text stuff w/o transformations
-    glRasterPos2i(0, h - 20);
-    char s[256];
-    sprintf(s, "Hello");
-    int len = (int)strlen(s);
-    for (int i = 0; i < len; i++) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[i]);
-    }
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-}
 
 void setCameraPosition() {
 
@@ -169,18 +248,18 @@ void setCameraPosition() {
         5.f ,
         player->getM() * 10.f + 5.f );
 
-    glm::vec3 facing(eye.x, 0, eye.z );
+    glm::vec3 facing(eye.x, 5.f, eye.z );
     glm::vec3 up(0, 1, 0);
 
     switch( player->getDirection() ){
         case North:
-            facing.z += 10.f ;
+            facing.z -= 10.f ;
             break ;
         case South:
-            facing.z-= 10.f ;
+            facing.z += 10.f ;
             break ;
         case West:
-            facing.x-= 10.f ;
+            facing.x -= 10.f ;
             break ;
         case East:
             facing.x += 10.f ;
@@ -188,6 +267,17 @@ void setCameraPosition() {
         default:
             break ;
     }
+
+    // eye.x = maze->N * 5.f ;
+    // eye.y = 100.f ;
+    // eye.z = maze->N * 5.f ;
+    // facing.x = eye.x ;
+    // facing.y = 0.f ;
+    // facing.z = eye.z ;
+    // up.x = 0.f;
+    // up.y = 0.f;
+    // up.z = -1.f;
+
     
     glm::mat4 view = glm::lookAt(eye, facing, up) ;
 
@@ -206,19 +296,15 @@ void setCameraPosition() {
 void reshape(int w, int h) {
     glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 
-
-    const float zNear = 2.f ;
-    const float zFar = 50.f ;
+    const float zNear = .5f ;
+    const float zFar = 150.f ;
     const float aspect = (GLfloat)w / (GLfloat)h ;
 
-    float fH = tan( 50.f * M_PI / 360.f ) * zNear;
-    float fW = fH * aspect;
-
-    glm::mat4 projection = glm::frustum( -fW, fW, -fH, fH, zNear, zFar );
+    float fovRadians = glm::radians( 105.f ) ; // 85' in radians
+    glm::mat4 projection = glm::perspective( fovRadians, aspect, zNear, zFar );
 
     int location = glGetUniformLocation(shaderProgram, "uProjection" );
     glProgramUniformMatrix4fv(shaderProgram, location, 1, GL_FALSE, &projection[0][0] );
-
 }
 
 
