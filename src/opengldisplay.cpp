@@ -31,33 +31,24 @@ GLuint EBO;
 unsigned int vertexShader;
 unsigned int fragmentShader;
 unsigned int shaderProgram;
+int numberOfWalls ;
 
-float vertices[] = {
-      0.0,  0.0,  0.0,  
-      0.0, 10.0,  0.0,  
-     10.0,  0.0,  0.0,  
-     10.0, 10.0,  0.0,  
-};
+constexpr int FloatsPerVertex = 6 ;
+constexpr int VerticesPerGridPoint = 2 ;
 
-
-unsigned short indices[] = {  
-    1, 0, 3,   // first triangle
-    3, 0, 2    // second triangle    
-};  
-
-int numberOfWalls = 0 ;
 
 void initTriangles() {
 
     const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec3 aCol;\n"
     "uniform mat4 uProjection;\n"
     "uniform mat4 uView;\n"
     "out vec4 vColor;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = uProjection * uView * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   vColor = vec4( aPos.x/100.f, aPos.y/100.f, aPos.z/100.f, 1.0);\n"
+    "   vColor = vec4( aCol.x, aCol.y, aCol.z, 1.0);\n"
     "}";
 
     const char *fragmentShaderSource = "#version 330 core\n"
@@ -72,17 +63,24 @@ void initTriangles() {
     // array of a 2 vertices at each corner of grid
     // 1 at floor level and 1 at ceiling
     vector<float> allVertices;  
-    allVertices.reserve( (maze->M+1) * (maze->N+1) * 6 );
+    int numGridPoints = (maze->M+1) * (maze->N+1);
+    allVertices.reserve( numGridPoints * FloatsPerVertex * VerticesPerGridPoint );
 
     for( int m=0 ; m<=maze->M ; m++ ) {
         for( int n=0 ; n<=maze->N ; n++ ) {
             allVertices.push_back( 10.f*n ) ;   // x
             allVertices.push_back( 0.f ) ;      // y
             allVertices.push_back( 10.f*m ) ;   // z
+            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
+            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
+            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
 
             allVertices.push_back( 10.f*n ) ;   // x
             allVertices.push_back( 10.f ) ;     // y
             allVertices.push_back( 10.f*m ) ;   // z
+            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
+            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
+            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
         }
     }
 
@@ -126,8 +124,6 @@ void initTriangles() {
                 allIndices.push_back( x2+1 ) ;
                 numberOfWalls++ ;
             }
-            
-            // goto quick_exit ;
         }
     }
 
@@ -146,7 +142,7 @@ void initTriangles() {
             allIndices.push_back( x2+1 ) ;
             numberOfWalls++ ;
         }
-    }
+    }    
 
 
     for( unsigned short n=0 ; n<maze->N ; n++ ) {
@@ -162,12 +158,10 @@ void initTriangles() {
             allIndices.push_back( x1 ) ;
             allIndices.push_back( x0 ) ;
             allIndices.push_back( x1+1 ) ;
-            numberOfWalls++ ;
+            numberOfWalls++ ;   
         }            
     }
 
-
-quick_exit:
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
@@ -208,7 +202,6 @@ quick_exit:
 
     glGenBuffers( 1, &EBO );
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-    // glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * allIndices.size(), allIndices.data(), GL_STATIC_DRAW );
 
     setCameraPosition();
@@ -229,12 +222,15 @@ void display() {
 
     glUseProgram(shaderProgram);
 
+    GLsizei stride = FloatsPerVertex*sizeof(float) ;
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, nullptr );
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)) );
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6*numberOfWalls,  GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, 6*numberOfWalls, GL_UNSIGNED_SHORT, 0);
 
     glutSwapBuffers();
 }
