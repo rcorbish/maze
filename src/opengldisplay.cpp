@@ -35,6 +35,7 @@ int numberOfWalls ;
 
 constexpr int FloatsPerVertex = 6 ;
 constexpr int VerticesPerGridPoint = 2 ;
+constexpr int TrianglesPerWall = 2 ;
 
 
 void initTriangles() {
@@ -64,25 +65,102 @@ void initTriangles() {
     // 1 at floor level and 1 at ceiling
     vector<float> allVertices;  
     int numGridPoints = (maze->M+1) * (maze->N+1);
-    allVertices.reserve( numGridPoints * FloatsPerVertex * VerticesPerGridPoint );
+    allVertices.reserve( numGridPoints * FloatsPerVertex * VerticesPerGridPoint + (FloatsPerVertex*4) );
+
+    float r = static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ; 
+    float g = static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ; 
+    float b = static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ;
 
     for( int m=0 ; m<=maze->M ; m++ ) {
         for( int n=0 ; n<=maze->N ; n++ ) {
+            r += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
+            g += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
+            b += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ;
+            if( r>= 1.f ) r -= 1.f ;
+            if( g>= 1.f ) g -= 1.f ;
+            if( b>= 1.f ) b -= 1.f ;
+
             allVertices.push_back( 10.f*n ) ;   // x
             allVertices.push_back( 0.f ) ;      // y
             allVertices.push_back( 10.f*m ) ;   // z
-            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
-            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
-            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
+            allVertices.push_back( r ) ;        // color r
+            allVertices.push_back( g ) ;        // color g
+            allVertices.push_back( b ) ;        // color b
+
+            r += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
+            g += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
+            b += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ;
+            if( r>= 1.f ) r -= 1.f ;
+            if( g>= 1.f ) g -= 1.f ;
+            if( b>= 1.f ) b -= 1.f ;
 
             allVertices.push_back( 10.f*n ) ;   // x
             allVertices.push_back( 10.f ) ;     // y
             allVertices.push_back( 10.f*m ) ;   // z
-            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
-            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
-            allVertices.push_back( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) ;      // color
+            allVertices.push_back( r ) ;        // color
+            allVertices.push_back( g ) ;        // color
+            allVertices.push_back( b ) ;        // color
         }
     }
+
+    int startOfFloor = numGridPoints * 2;
+    // define floor == full plate over floor
+    allVertices.push_back( 0.f ) ;   // x
+    allVertices.push_back( 0.f ) ;   // y
+    allVertices.push_back( 0.f ) ;   // z
+    allVertices.push_back( .2f ) ;        // color r
+    allVertices.push_back( .2f ) ;        // color g
+    allVertices.push_back( .2f ) ;        // color b
+
+    allVertices.push_back( 10.f*maze->N ) ;   // x
+    allVertices.push_back( 0.f ) ;            // y
+    allVertices.push_back( 0.f ) ;   // z
+    allVertices.push_back( .5f ) ;        // color r
+    allVertices.push_back( .5f ) ;        // color g
+    allVertices.push_back( .5f ) ;        // color b
+
+    allVertices.push_back( 10.f*maze->N ) ;   // x
+    allVertices.push_back( 0.f ) ;            // y
+    allVertices.push_back( 10.f*maze->M ) ;   // z
+    allVertices.push_back( .8f ) ;        // color r
+    allVertices.push_back( .8f ) ;        // color g
+    allVertices.push_back( .8f ) ;        // color b
+
+    allVertices.push_back( 0 ) ;   // x
+    allVertices.push_back( 0.f ) ;            // y
+    allVertices.push_back( 10.f*maze->M ) ;   // z
+    allVertices.push_back( .5f ) ;        // color r
+    allVertices.push_back( .5f ) ;        // color g
+    allVertices.push_back( .5f ) ;        // color b
+
+    // define ceiling == full plate over floor
+    allVertices.push_back( 0.f ) ;   // x
+    allVertices.push_back( 10.f ) ;   // y
+    allVertices.push_back( 0.f ) ;   // z
+    allVertices.push_back( .2f ) ;        // color r
+    allVertices.push_back( .2f ) ;        // color g
+    allVertices.push_back( .4f ) ;        // color b
+
+    allVertices.push_back( 10.f*maze->N ) ;   // x
+    allVertices.push_back( 10.f ) ;            // y
+    allVertices.push_back( 0.f ) ;   // z
+    allVertices.push_back( .2f ) ;        // color r
+    allVertices.push_back( .2f ) ;        // color g
+    allVertices.push_back( .4f ) ;        // color b
+
+    allVertices.push_back( 10.f*maze->N ) ;   // x
+    allVertices.push_back( 10.f ) ;            // y
+    allVertices.push_back( 10.f*maze->M ) ;   // z
+    allVertices.push_back( .2f ) ;        // color r
+    allVertices.push_back( .2f ) ;        // color g
+    allVertices.push_back( .4f ) ;        // color b
+
+    allVertices.push_back( 0 ) ;   // x
+    allVertices.push_back( 10.f ) ;            // y
+    allVertices.push_back( 10.f*maze->M ) ;   // z
+    allVertices.push_back( .2f ) ;        // color r
+    allVertices.push_back( .2f ) ;        // color g
+    allVertices.push_back( .4f ) ;        // color b
 
     //
     //   Defines points for East-West wall and North-South wall
@@ -92,10 +170,24 @@ void initTriangles() {
     //      .
     //      S
     //
-     vector<unsigned short> allIndices;      
-    allIndices.reserve( (maze->M) * (maze->N) * 12 ); // max number of walls
+    vector<unsigned short> allIndices;      
+    allIndices.reserve( (maze->M) * (maze->N) * 12 + 6 ); // max number of walls
 
-    numberOfWalls = 0 ;
+    allIndices.push_back( startOfFloor ) ;
+    allIndices.push_back( startOfFloor+3 ) ;
+    allIndices.push_back( startOfFloor+1 ) ;
+    allIndices.push_back( startOfFloor+1 ) ;
+    allIndices.push_back( startOfFloor+3 ) ;
+    allIndices.push_back( startOfFloor+2 ) ;
+
+    allIndices.push_back( startOfFloor+4 ) ;
+    allIndices.push_back( startOfFloor+7 ) ;
+    allIndices.push_back( startOfFloor+5 ) ;
+    allIndices.push_back( startOfFloor+5 ) ;
+    allIndices.push_back( startOfFloor+7 ) ;
+    allIndices.push_back( startOfFloor+6 ) ;
+
+    numberOfWalls = 2 ;
     unsigned short row_length = 2 * (maze->N+1) ;
 
     for( unsigned short m=0 ; m<maze->M ; m++ ) {
@@ -230,7 +322,7 @@ void display() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)) );
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6*numberOfWalls, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, 3 * TrianglesPerWall * numberOfWalls, GL_UNSIGNED_SHORT, 0);
 
     glutSwapBuffers();
 }
