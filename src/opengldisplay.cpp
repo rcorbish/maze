@@ -73,9 +73,9 @@ void initTriangles() {
 
     for( int m=0 ; m<=maze->M ; m++ ) {
         for( int n=0 ; n<=maze->N ; n++ ) {
-            r += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
-            g += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
-            b += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ;
+            r += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
+            g += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
+            b += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
             if( r>= 1.f ) r -= 1.f ;
             if( g>= 1.f ) g -= 1.f ;
             if( b>= 1.f ) b -= 1.f ;
@@ -87,9 +87,9 @@ void initTriangles() {
             allVertices.push_back( g ) ;        // color g
             allVertices.push_back( b ) ;        // color b
 
-            r += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
-            g += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ; 
-            b += static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) / 50.f ;
+            r += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
+            g += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
+            b += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
             if( r>= 1.f ) r -= 1.f ;
             if( g>= 1.f ) g -= 1.f ;
             if( b>= 1.f ) b -= 1.f ;
