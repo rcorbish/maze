@@ -138,29 +138,29 @@ void initTriangles() {
     allVertices.push_back( 10.f ) ;   // y
     allVertices.push_back( 0.f ) ;   // z
     allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .2f ) ;        // color g
-    allVertices.push_back( .4f ) ;        // color b
+    allVertices.push_back( .5f ) ;        // color g
+    allVertices.push_back( .8f ) ;        // color b
 
     allVertices.push_back( 10.f*maze->N ) ;   // x
     allVertices.push_back( 10.f ) ;            // y
     allVertices.push_back( 0.f ) ;   // z
     allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .2f ) ;        // color g
-    allVertices.push_back( .4f ) ;        // color b
+    allVertices.push_back( .6f ) ;        // color g
+    allVertices.push_back( .8f ) ;        // color b
 
     allVertices.push_back( 10.f*maze->N ) ;   // x
     allVertices.push_back( 10.f ) ;            // y
     allVertices.push_back( 10.f*maze->M ) ;   // z
-    allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .2f ) ;        // color g
-    allVertices.push_back( .4f ) ;        // color b
+    allVertices.push_back( .9f ) ;        // color r
+    allVertices.push_back( .9f ) ;        // color g
+    allVertices.push_back( .8f ) ;        // color b
 
     allVertices.push_back( 0 ) ;   // x
     allVertices.push_back( 10.f ) ;            // y
     allVertices.push_back( 10.f*maze->M ) ;   // z
     allVertices.push_back( .2f ) ;        // color r
     allVertices.push_back( .2f ) ;        // color g
-    allVertices.push_back( .4f ) ;        // color b
+    allVertices.push_back( .8f ) ;        // color b
 
     //
     //   Defines points for East-West wall and North-South wall
