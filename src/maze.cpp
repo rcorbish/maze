@@ -151,6 +151,22 @@ bool Maze::isWallInFront( const Direction facing, const int m, const int n ) con
     return rc ;
 }
 
+std::vector<std::pair<int,int>> Maze::verticalSegments( int columnIndex ) {
+    std::vector<std::pair<int,int>> results;
+    int y = 0;
+    while( y<M ) {
+        while (isWallInFront(South,y,columnIndex)) {
+            y++;
+        }
+        int start = y ;
+        while (!isWallInFront(South,y,columnIndex)) {
+            y++;
+        }
+        results.emplace_back(start, y);
+    }
+    return results;
+}
+
 static string images[] = { "?", "╷", "╵", "│", "╶", "┌" , "└", "├", "╴", "┐", "┘", "┤", "─", "┬", "┴", "┼"   } ;
 
 ostream & operator << ( ostream &s, const Maze &maze ) {
@@ -163,15 +179,6 @@ ostream & operator << ( ostream &s, const Maze &maze ) {
         }
         firstRow = false ;
     }
-    
-    
-    // for( const auto &w : maze.minimumSpanningTree ) {
-    //     int x0 = w.from / maze.M ;
-    //     int y0 = w.from % maze.M ;
-    //     int x1 = w.to / maze.M ;
-    //     int y1 = w.to % maze.M ;
-    //     s << x0 << "," << y0 << " " << x1 << "," << y1 << " (" << w.weight << ")\n" ;
-    // }
     
     return s ;
 }

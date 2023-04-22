@@ -324,6 +324,22 @@ void display() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, 3 * TrianglesPerWall * numberOfWalls, GL_UNSIGNED_SHORT, 0);
 
+    glUseProgram(0);
+
+    double halfside = 0.25;
+    double x = 0.75 ;
+    double y = 0.75;
+    
+    glColor4d(0x00,0xff,0x00, 0.1);
+    glBegin(GL_POLYGON);
+
+    glVertex2d(x + halfside, y + halfside);
+    glVertex2d(x + halfside, y - halfside);
+    glVertex2d(x - halfside, y - halfside);
+    glVertex2d(x - halfside, y + halfside);
+
+    glEnd();
+
     glutSwapBuffers();
 }
 
@@ -356,17 +372,6 @@ void setCameraPosition() {
             break ;
     }
 
-    // eye.x = maze->N * 5.f ;
-    // eye.y = 100.f ;
-    // eye.z = maze->N * 5.f ;
-    // facing.x = eye.x ;
-    // facing.y = 0.f ;
-    // facing.z = eye.z ;
-    // up.x = 0.f;
-    // up.y = 0.f;
-    // up.z = -1.f;
-
-    
     glm::mat4 view = glm::lookAt(eye, facing, up) ;
 
     int location = glGetUniformLocation(shaderProgram, "uView" );
@@ -430,16 +435,29 @@ void keyboard(unsigned char key, int x, int y) {
     if (key == 'r') {
         player->reset() ;
         reset();
-    } else if (key == '[') {
-        player->turn( Left ) ;
-    } else if (key == ']') {
-        player->turn( Right ) ;
-    } else if (key == 'w') {
-        player->step(*maze);
     } else if (key == 'q') {
         exit(0);
     }
 
     setCameraPosition();    // set model view
     glutPostRedisplay();
+}
+
+void handleSpecialKeypress(int key, int x, int y) {
+ switch (key) {
+ case GLUT_KEY_LEFT:
+        player->turn(Left) ; 
+  break;
+ case GLUT_KEY_RIGHT:
+        player->turn(Right) ;
+  break;
+ case GLUT_KEY_UP:
+        player->step(*maze) ;
+  break;
+ }
+ setCameraPosition();    // set model view
+ glutPostRedisplay();
+}
+
+void handleSpecialKeyReleased(int key, int x, int y) {
 }

@@ -26,6 +26,8 @@ void displayinit( int argc, char **argv ) {
   glutMouseFunc(mousebutton);
   glutMotionFunc(mousemove) ;
   glutKeyboardFunc(keyboard);
+  glutSpecialFunc(handleSpecialKeypress);
+  glutSpecialUpFunc(handleSpecialKeyReleased);
 
   glutReshapeWindow( 500, 500 );
  

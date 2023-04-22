@@ -22,3 +22,5 @@ void reset() ;
 void mousemove(int x, int y) ;
 void mousebutton(int button, int state, int x, int y) ;
 void reshape(int w,int h) ;
+void handleSpecialKeyReleased(int key, int x, int y);
+void handleSpecialKeypress(int key, int x, int y);
