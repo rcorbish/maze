@@ -28,10 +28,12 @@ class Maze {
         const int M ;    
         const int N ;
         
-        Maze( int _M, int _N ) ;
-        bool isWallInFront( const Direction facing, const int m, const int n ) const ;
-        inline std::vector<int> operator[]( int ix ) const { return cubes[ix] ; }
-        std::vector<std::pair<int,int>> verticalSegments( int columnIndex );
+        Maze(int _M, int _N) ;
+        bool isWallInFront(const Direction facing, const int m, const int n) const ;
+        inline std::vector<int> operator[](int ix) const { return cubes[ix]; }
+        inline int get(int m, int n) const { return cubes[m][n]; }
+        std::vector<std::pair<int, int>> verticalSegments(int columnIndex);
+        std::vector<std::pair<int, int>> horizontalSegments(int rowIndex);
 
 } ;
 

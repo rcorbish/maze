@@ -174,3 +174,51 @@ ostream & operator << ( ostream &s, const Maze &maze ) {
     
     return s ;
 }
+
+
+std::vector<std::pair<int,int>> Maze::verticalSegments( int columnIndex ) {
+    std::vector<std::pair<int,int>> segments;
+
+    int row = 0;
+    int segmentStart = -1;
+
+    while (row < M) {
+        if (isWallInFront(South,row,columnIndex)) {
+            if (segmentStart >= 0) {
+                segments.emplace_back(segmentStart, row);
+                segmentStart = -1;
+            }
+        } else {
+            if (segmentStart < 0) {
+                segmentStart = row;
+            }
+        }
+        row++;
+    }
+
+    return segments;
+}
+
+
+std::vector<std::pair<int,int>> Maze::horizontalSegments( int rowIndex ) {
+    std::vector<std::pair<int,int>> segments;
+
+    int column = 0;
+    int segmentStart = -1;
+
+    while (column < N) {
+        if (isWallInFront(East, rowIndex, column)) {
+            if (segmentStart >= 0) {
+                segments.emplace_back(column, segmentStart);
+                segmentStart = -1;
+            }
+        } else {
+            if (segmentStart < 0) {
+                segmentStart = column;
+            }
+        }
+        column++;
+    }
+
+    return segments;
+}

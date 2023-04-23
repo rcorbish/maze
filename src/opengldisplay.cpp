@@ -37,6 +37,8 @@ constexpr int FloatsPerVertex = 6 ;
 constexpr int VerticesPerGridPoint = 2 ;
 constexpr int TrianglesPerWall = 2 ;
 
+vector<vector<pair<int,int>>> verticals;
+vector<vector<pair<int,int>>> horizontals;
 
 void initTriangles() {
 
@@ -219,7 +221,9 @@ void initTriangles() {
         }
     }
 
+
     for( unsigned short m=0 ; m<maze->M ; m++ ) {
+        horizontals.push_back(maze->horizontalSegments(m));
         int n = maze->N ;         
         unsigned short x0 = m * row_length + n*2 ;
         unsigned short x1 = x0 + 2 ;
@@ -238,6 +242,8 @@ void initTriangles() {
 
 
     for( unsigned short n=0 ; n<maze->N ; n++ ) {
+        verticals.push_back(maze->verticalSegments(n));
+
         int m = maze->M ;
         unsigned short x0 = m * row_length + n*2 ;
         unsigned short x1 = x0 + 2 ;
@@ -325,20 +331,35 @@ void display() {
     glDrawElements(GL_TRIANGLES, 3 * TrianglesPerWall * numberOfWalls, GL_UNSIGNED_SHORT, 0);
 
     glUseProgram(0);
-
-    double halfside = 0.25;
-    double x = 0.75 ;
-    double y = 0.75;
-    
+  
+    // green box
     glColor4d(0x00,0xff,0x00, 0.1);
-    glBegin(GL_POLYGON);
+    glBegin(GL_LINES);
 
-    glVertex2d(x + halfside, y + halfside);
-    glVertex2d(x + halfside, y - halfside);
-    glVertex2d(x - halfside, y - halfside);
-    glVertex2d(x - halfside, y + halfside);
+    double xr = 1.0 / (2.0 * maze->N);
+    double yr = 1.0 / (2.0 * maze->M);
+
+    for(int x = 0 ; x < verticals.size() ; x++) {
+        for(auto vs : verticals[x]) {
+            glVertex2d(0.5+x*yr, 0.95-vs.first*xr);
+            glVertex2d(0.5+x*yr, 0.95-vs.second*xr);
+        }
+    }
+    for(int y = 0 ; y < horizontals.size() ; y++) {
+        for(auto hs : horizontals[y]) {
+            glVertex2d(0.5+hs.first*yr, 0.95-y*xr);
+            glVertex2d(0.5+hs.second*yr, 0.95-y*xr);
+        }
+    }
 
     glEnd();
+
+    glColor4d(0xff,0xff,0xff, 0.1);
+    glPointSize(3.0);
+    glBegin(GL_POINTS);
+        glVertex2d(0.5+player->getN()/20.0, 0.95-player->getM()/20.0);
+    glEnd();
+
 
     glutSwapBuffers();
 }
