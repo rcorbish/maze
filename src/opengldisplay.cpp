@@ -334,6 +334,7 @@ void display() {
   
     // green box
     glColor4d(0x00,0xff,0x00, 0.1);
+    glLineWidth (2.0);
     glBegin(GL_LINES);
 
     double xr = 1.0 / (2.0 * maze->N);
@@ -355,9 +356,9 @@ void display() {
     glEnd();
 
     glColor4d(0xff,0xff,0xff, 0.1);
-    glPointSize(3.0);
+    glPointSize(6.0);
     glBegin(GL_POINTS);
-        glVertex2d(0.5+player->getN()/20.0, 0.95-player->getM()/20.0);
+        glVertex2d(0.5+player->getN()*yr, 0.95-player->getM()*xr);
     glEnd();
 
 
