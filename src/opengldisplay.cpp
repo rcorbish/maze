@@ -48,6 +48,18 @@ void makeVertex( vector<float> &vertices,
     vertices.push_back(b); 
 }
 
+
+void makeIndex( vector<GLushort> &allIndices, 
+                const GLushort a, const GLushort b, const GLushort c,
+                const GLushort d, const GLushort e, const GLushort f) {
+    allIndices.push_back(a) ;
+    allIndices.push_back(b) ;
+    allIndices.push_back(c) ;
+    allIndices.push_back(d) ;
+    allIndices.push_back(e) ;
+    allIndices.push_back(f) ;
+}
+
 void initTriangles() {
 
     constexpr auto vertexShaderSource = "#version 330 core\n"
@@ -130,22 +142,13 @@ void initTriangles() {
     //      .
     //      S
     //
-    vector<unsigned short> allIndices;
+    vector<GLushort> allIndices;
     allIndices.reserve((maze->M) * (maze->N) * 12 + 6); // max number of walls
 
-    allIndices.push_back(startOfFloor);
-    allIndices.push_back(startOfFloor + 3);
-    allIndices.push_back(startOfFloor + 1);
-    allIndices.push_back(startOfFloor + 1);
-    allIndices.push_back(startOfFloor + 3);
-    allIndices.push_back(startOfFloor + 2);
-
-    allIndices.push_back(startOfFloor + 4);
-    allIndices.push_back(startOfFloor + 7);
-    allIndices.push_back(startOfFloor + 5);
-    allIndices.push_back(startOfFloor + 5);
-    allIndices.push_back(startOfFloor + 7);
-    allIndices.push_back(startOfFloor + 6);
+    makeIndex (allIndices, startOfFloor, startOfFloor + 3, startOfFloor + 1,
+                           startOfFloor + 1, startOfFloor + 3, startOfFloor + 2);
+    makeIndex (allIndices, startOfFloor + 4, startOfFloor + 7, startOfFloor + 5,
+                           startOfFloor + 5, startOfFloor + 7, startOfFloor + 6);
 
     numberOfWalls = 2;
     auto row_length = 2 * (maze->N + 1);
@@ -158,22 +161,12 @@ void initTriangles() {
             auto x2 = x0 + row_length;
 
             if (maze->isWallInFront(North, m, n)) {
-                allIndices.push_back(x0 + 1);
-                allIndices.push_back(x0);
-                allIndices.push_back(x1 + 1);
-                allIndices.push_back(x1);
-                allIndices.push_back(x0);
-                allIndices.push_back(x1 + 1);
+                makeIndex (allIndices, x0 + 1, x0, x1 + 1, x1, x0, x1 + 1);
                 numberOfWalls++;
             }
 
             if (maze->isWallInFront(West, m, n)) {
-                allIndices.push_back(x0);
-                allIndices.push_back(x0 + 1);
-                allIndices.push_back(x2);
-                allIndices.push_back(x2);
-                allIndices.push_back(x0 + 1);
-                allIndices.push_back(x2 + 1);
+                makeIndex (allIndices, x0, x0 + 1, x2, x2, x0 + 1, x2 + 1);
                 numberOfWalls++;
             }
         }
@@ -187,12 +180,7 @@ void initTriangles() {
         auto x2 = x0 + row_length;
 
         if (maze->isWallInFront(West, m, n)) {
-            allIndices.push_back(x0);
-            allIndices.push_back(x0 + 1);
-            allIndices.push_back(x2);
-            allIndices.push_back(x2);
-            allIndices.push_back(x0 + 1);
-            allIndices.push_back(x2 + 1);
+            makeIndex (allIndices, x0, x0 + 1, x2, x2, x0 + 1, x2 + 1);
             numberOfWalls++;
         }
     }
@@ -206,12 +194,7 @@ void initTriangles() {
         auto x2 = x0 + row_length;
 
         if (maze->isWallInFront(North, m, n)) {
-            allIndices.push_back(x0 + 1);
-            allIndices.push_back(x0);
-            allIndices.push_back(x1 + 1);
-            allIndices.push_back(x1);
-            allIndices.push_back(x0);
-            allIndices.push_back(x1 + 1);
+            makeIndex (allIndices, x0 + 1, x0, x1 + 1, x1, x0, x1 + 1);
             numberOfWalls++;
         }
     }
