@@ -4,165 +4,167 @@
 #include <vector>
 
 #define GL_GLEXT_PROTOTYPES
-#include <GL/freeglut_std.h>
-#include <GL/freeglut_ext.h>
 #include <GL/glut.h>
-#include <glm/glm.hpp>
+#include <GL/freeglut_ext.h>
+#include <GL/freeglut_std.h>
+
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "opengldisplay.hpp"
 
-using namespace std ;
-
-float anglex;
-float angley;
-float radius;
+using namespace std;
 
 float prev_x;
 float prev_y;
 
 float t = 1000000.f;
 
-unsigned int VAO;
-unsigned int VBO;
+GLuint VAO;
+GLuint VBO;
 GLuint EBO;
 
-unsigned int vertexShader;
-unsigned int fragmentShader;
-unsigned int shaderProgram;
-int numberOfWalls ;
+GLuint vertexShader;
+GLuint fragmentShader;
+GLuint shaderProgram;
+int numberOfWalls;
 
-constexpr int FloatsPerVertex = 6 ;
-constexpr int VerticesPerGridPoint = 2 ;
-constexpr int TrianglesPerWall = 2 ;
+constexpr GLsizei FloatsPerVertex = 6;
+constexpr GLsizei VerticesPerGridPoint = 2;
+constexpr GLsizei TrianglesPerWall = 2;
 
-vector<vector<pair<int,int>>> verticals;
-vector<vector<pair<int,int>>> horizontals;
+vector<vector<pair<int, int>>> verticals;
+vector<vector<pair<int, int>>> horizontals;
 
 void initTriangles() {
 
-    const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aCol;\n"
-    "uniform mat4 uProjection;\n"
-    "uniform mat4 uView;\n"
-    "out vec4 vColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = uProjection * uView * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   vColor = vec4( aCol.x, aCol.y, aCol.z, 1.0);\n"
-    "}";
+    constexpr auto vertexShaderSource = "#version 330 core\n"
+                                     "layout (location = 0) in vec3 aPos;\n"
+                                     "layout (location = 1) in vec3 aCol;\n"
+                                     "uniform mat4 uProjection;\n"
+                                     "uniform mat4 uView;\n"
+                                     "out vec4 vColor;\n"
+                                     "void main()\n"
+                                     "{\n"
+                                     "   gl_Position = uProjection * uView * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+                                     "   vColor = vec4( aCol.x, aCol.y, aCol.z, 1.0);\n"
+                                     "}";
 
-    const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 vFragColor;\n"
-    "in vec4 vColor;\n"
-    "void main()\n"
-    "{\n"
-    "   vFragColor = vColor;\n"
-    "}";
-
+    constexpr auto fragmentShaderSource = "#version 330 core\n"
+                                       "out vec4 vFragColor;\n"
+                                       "in vec4 vColor;\n"
+                                       "void main()\n"
+                                       "{\n"
+                                       "   vFragColor = vColor;\n"
+                                       "}";
 
     // array of a 2 vertices at each corner of grid
     // 1 at floor level and 1 at ceiling
-    vector<float> allVertices;  
-    int numGridPoints = (maze->M+1) * (maze->N+1);
-    allVertices.reserve( numGridPoints * FloatsPerVertex * VerticesPerGridPoint + (FloatsPerVertex*4) );
+    vector<float> allVertices;
+    const auto numGridPoints = (maze->M + 1) * (maze->N + 1);
+    allVertices.reserve(numGridPoints * FloatsPerVertex * VerticesPerGridPoint + (FloatsPerVertex * 4));
 
-    float r = static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ; 
-    float g = static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ; 
-    float b = static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ;
+    auto r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    auto g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    auto b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
-    for( int m=0 ; m<=maze->M ; m++ ) {
-        for( int n=0 ; n<=maze->N ; n++ ) {
-            r += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
-            g += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
-            b += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
-            if( r>= 1.f ) r -= 1.f ;
-            if( g>= 1.f ) g -= 1.f ;
-            if( b>= 1.f ) b -= 1.f ;
+    for (auto m = 0; m <= maze->M; m++) {
+        for (auto n = 0; n <= maze->N; n++) {
+            r += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
+            g += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
+            b += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
+            if (r >= 1.f)
+                r -= 1.f;
+            if (g >= 1.f)
+                g -= 1.f;
+            if (b >= 1.f)
+                b -= 1.f;
 
-            allVertices.push_back( 10.f*n ) ;   // x
-            allVertices.push_back( 0.f ) ;      // y
-            allVertices.push_back( 10.f*m ) ;   // z
-            allVertices.push_back( r ) ;        // color r
-            allVertices.push_back( g ) ;        // color g
-            allVertices.push_back( b ) ;        // color b
+            allVertices.push_back(10.f * n); // x
+            allVertices.push_back(0.f);      // y
+            allVertices.push_back(10.f * m); // z
+            allVertices.push_back(r);        // color r
+            allVertices.push_back(g);        // color g
+            allVertices.push_back(b);        // color b
 
-            r += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
-            g += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
-            b += ( static_cast <float>( rand() ) / static_cast <float>( RAND_MAX ) ) - 0.5f ; 
-            if( r>= 1.f ) r -= 1.f ;
-            if( g>= 1.f ) g -= 1.f ;
-            if( b>= 1.f ) b -= 1.f ;
+            r += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
+            g += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
+            b += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
+            if (r >= 1.f)
+                r -= 1.f;
+            if (g >= 1.f)
+                g -= 1.f;
+            if (b >= 1.f)
+                b -= 1.f;
 
-            allVertices.push_back( 10.f*n ) ;   // x
-            allVertices.push_back( 10.f ) ;     // y
-            allVertices.push_back( 10.f*m ) ;   // z
-            allVertices.push_back( r ) ;        // color
-            allVertices.push_back( g ) ;        // color
-            allVertices.push_back( b ) ;        // color
+            allVertices.push_back(10.f * n); // x
+            allVertices.push_back(10.f);     // y
+            allVertices.push_back(10.f * m); // z
+            allVertices.push_back(r);        // color
+            allVertices.push_back(g);        // color
+            allVertices.push_back(b);        // color
         }
     }
 
     int startOfFloor = numGridPoints * 2;
     // define floor == full plate over floor
-    allVertices.push_back( 0.f ) ;   // x
-    allVertices.push_back( 0.f ) ;   // y
-    allVertices.push_back( 0.f ) ;   // z
-    allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .2f ) ;        // color g
-    allVertices.push_back( .2f ) ;        // color b
+    allVertices.push_back(0.f); // x
+    allVertices.push_back(0.f); // y
+    allVertices.push_back(0.f); // z
+    allVertices.push_back(.2f); // color r
+    allVertices.push_back(.2f); // color g
+    allVertices.push_back(.2f); // color b
 
-    allVertices.push_back( 10.f*maze->N ) ;   // x
-    allVertices.push_back( 0.f ) ;            // y
-    allVertices.push_back( 0.f ) ;   // z
-    allVertices.push_back( .5f ) ;        // color r
-    allVertices.push_back( .5f ) ;        // color g
-    allVertices.push_back( .5f ) ;        // color b
+    allVertices.push_back(10.f * maze->N); // x
+    allVertices.push_back(0.f);            // y
+    allVertices.push_back(0.f);            // z
+    allVertices.push_back(.5f);            // color r
+    allVertices.push_back(.5f);            // color g
+    allVertices.push_back(.5f);            // color b
 
-    allVertices.push_back( 10.f*maze->N ) ;   // x
-    allVertices.push_back( 0.f ) ;            // y
-    allVertices.push_back( 10.f*maze->M ) ;   // z
-    allVertices.push_back( .8f ) ;        // color r
-    allVertices.push_back( .8f ) ;        // color g
-    allVertices.push_back( .8f ) ;        // color b
+    allVertices.push_back(10.f * maze->N); // x
+    allVertices.push_back(0.f);            // y
+    allVertices.push_back(10.f * maze->M); // z
+    allVertices.push_back(.8f);            // color r
+    allVertices.push_back(.8f);            // color g
+    allVertices.push_back(.8f);            // color b
 
-    allVertices.push_back( 0 ) ;   // x
-    allVertices.push_back( 0.f ) ;            // y
-    allVertices.push_back( 10.f*maze->M ) ;   // z
-    allVertices.push_back( .5f ) ;        // color r
-    allVertices.push_back( .5f ) ;        // color g
-    allVertices.push_back( .5f ) ;        // color b
+    allVertices.push_back(0);              // x
+    allVertices.push_back(0.f);            // y
+    allVertices.push_back(10.f * maze->M); // z
+    allVertices.push_back(.5f);            // color r
+    allVertices.push_back(.5f);            // color g
+    allVertices.push_back(.5f);            // color b
 
     // define ceiling == full plate over floor
-    allVertices.push_back( 0.f ) ;   // x
-    allVertices.push_back( 10.f ) ;   // y
-    allVertices.push_back( 0.f ) ;   // z
-    allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .5f ) ;        // color g
-    allVertices.push_back( .8f ) ;        // color b
+    allVertices.push_back(0.f);  // x
+    allVertices.push_back(10.f); // y
+    allVertices.push_back(0.f);  // z
+    allVertices.push_back(.2f);  // color r
+    allVertices.push_back(.5f);  // color g
+    allVertices.push_back(.8f);  // color b
 
-    allVertices.push_back( 10.f*maze->N ) ;   // x
-    allVertices.push_back( 10.f ) ;            // y
-    allVertices.push_back( 0.f ) ;   // z
-    allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .6f ) ;        // color g
-    allVertices.push_back( .8f ) ;        // color b
+    allVertices.push_back(10.f * maze->N); // x
+    allVertices.push_back(10.f);           // y
+    allVertices.push_back(0.f);            // z
+    allVertices.push_back(.2f);            // color r
+    allVertices.push_back(.6f);            // color g
+    allVertices.push_back(.8f);            // color b
 
-    allVertices.push_back( 10.f*maze->N ) ;   // x
-    allVertices.push_back( 10.f ) ;            // y
-    allVertices.push_back( 10.f*maze->M ) ;   // z
-    allVertices.push_back( .9f ) ;        // color r
-    allVertices.push_back( .9f ) ;        // color g
-    allVertices.push_back( .8f ) ;        // color b
+    allVertices.push_back(10.f * maze->N); // x
+    allVertices.push_back(10.f);           // y
+    allVertices.push_back(10.f * maze->M); // z
+    allVertices.push_back(.9f);            // color r
+    allVertices.push_back(.9f);            // color g
+    allVertices.push_back(.8f);            // color b
 
-    allVertices.push_back( 0 ) ;   // x
-    allVertices.push_back( 10.f ) ;            // y
-    allVertices.push_back( 10.f*maze->M ) ;   // z
-    allVertices.push_back( .2f ) ;        // color r
-    allVertices.push_back( .2f ) ;        // color g
-    allVertices.push_back( .8f ) ;        // color b
+    allVertices.push_back(0);              // x
+    allVertices.push_back(10.f);           // y
+    allVertices.push_back(10.f * maze->M); // z
+    allVertices.push_back(.2f);            // color r
+    allVertices.push_back(.2f);            // color g
+    allVertices.push_back(.8f);            // color b
 
     //
     //   Defines points for East-West wall and North-South wall
@@ -172,114 +174,114 @@ void initTriangles() {
     //      .
     //      S
     //
-    vector<unsigned short> allIndices;      
-    allIndices.reserve( (maze->M) * (maze->N) * 12 + 6 ); // max number of walls
+    vector<unsigned short> allIndices;
+    allIndices.reserve((maze->M) * (maze->N) * 12 + 6); // max number of walls
 
-    allIndices.push_back( startOfFloor ) ;
-    allIndices.push_back( startOfFloor+3 ) ;
-    allIndices.push_back( startOfFloor+1 ) ;
-    allIndices.push_back( startOfFloor+1 ) ;
-    allIndices.push_back( startOfFloor+3 ) ;
-    allIndices.push_back( startOfFloor+2 ) ;
+    allIndices.push_back(startOfFloor);
+    allIndices.push_back(startOfFloor + 3);
+    allIndices.push_back(startOfFloor + 1);
+    allIndices.push_back(startOfFloor + 1);
+    allIndices.push_back(startOfFloor + 3);
+    allIndices.push_back(startOfFloor + 2);
 
-    allIndices.push_back( startOfFloor+4 ) ;
-    allIndices.push_back( startOfFloor+7 ) ;
-    allIndices.push_back( startOfFloor+5 ) ;
-    allIndices.push_back( startOfFloor+5 ) ;
-    allIndices.push_back( startOfFloor+7 ) ;
-    allIndices.push_back( startOfFloor+6 ) ;
+    allIndices.push_back(startOfFloor + 4);
+    allIndices.push_back(startOfFloor + 7);
+    allIndices.push_back(startOfFloor + 5);
+    allIndices.push_back(startOfFloor + 5);
+    allIndices.push_back(startOfFloor + 7);
+    allIndices.push_back(startOfFloor + 6);
 
-    numberOfWalls = 2 ;
-    unsigned short row_length = 2 * (maze->N+1) ;
+    numberOfWalls = 2;
+    auto row_length = 2 * (maze->N + 1);
 
-    for( unsigned short m=0 ; m<maze->M ; m++ ) {
-        for( unsigned short n=0 ; n<maze->N ; n++ ) {
-         
-            unsigned short x0 = m * row_length + n*2 ;
-            unsigned short x1 = x0 + 2 ;
-            unsigned short x2 = x0 + row_length ;
+    for (auto m = 0; m < maze->M; m++) {
+        for (auto n = 0; n < maze->N; n++) {
 
-            if( maze->isWallInFront( North, m, n ) ) {
-                allIndices.push_back( x0+1 ) ;
-                allIndices.push_back( x0 ) ;
-                allIndices.push_back( x1+1 ) ;
-                allIndices.push_back( x1 ) ;
-                allIndices.push_back( x0 ) ;
-                allIndices.push_back( x1+1 ) ;
-                numberOfWalls++ ;
+            auto x0 = m * row_length + n * 2;
+            auto x1 = x0 + 2;
+            auto x2 = x0 + row_length;
+
+            if (maze->isWallInFront(North, m, n)) {
+                allIndices.push_back(x0 + 1);
+                allIndices.push_back(x0);
+                allIndices.push_back(x1 + 1);
+                allIndices.push_back(x1);
+                allIndices.push_back(x0);
+                allIndices.push_back(x1 + 1);
+                numberOfWalls++;
             }
-            
-            if( maze->isWallInFront( West, m, n ) ) {
-                allIndices.push_back( x0 ) ;
-                allIndices.push_back( x0+1 ) ;
-                allIndices.push_back( x2 ) ;
-                allIndices.push_back( x2 ) ;
-                allIndices.push_back( x0+1 ) ;
-                allIndices.push_back( x2+1 ) ;
-                numberOfWalls++ ;
+
+            if (maze->isWallInFront(West, m, n)) {
+                allIndices.push_back(x0);
+                allIndices.push_back(x0 + 1);
+                allIndices.push_back(x2);
+                allIndices.push_back(x2);
+                allIndices.push_back(x0 + 1);
+                allIndices.push_back(x2 + 1);
+                numberOfWalls++;
             }
         }
     }
 
-
-    for( unsigned short m=0 ; m<maze->M ; m++ ) {
+    for (auto m = 0; m < maze->M; m++) {
         horizontals.push_back(maze->horizontalSegments(m));
-        int n = maze->N ;         
-        unsigned short x0 = m * row_length + n*2 ;
-        unsigned short x1 = x0 + 2 ;
-        unsigned short x2 = x0 + row_length ;
+        auto n = maze->N;
+        auto x0 = m * row_length + n * 2;
+        auto x1 = x0 + 2;
+        auto x2 = x0 + row_length;
 
-        if( maze->isWallInFront( West, m, n ) ) {
-            allIndices.push_back( x0 ) ;
-            allIndices.push_back( x0+1 ) ;
-            allIndices.push_back( x2 ) ;
-            allIndices.push_back( x2 ) ;
-            allIndices.push_back( x0+1 ) ;
-            allIndices.push_back( x2+1 ) ;
-            numberOfWalls++ ;
+        if (maze->isWallInFront(West, m, n)) {
+            allIndices.push_back(x0);
+            allIndices.push_back(x0 + 1);
+            allIndices.push_back(x2);
+            allIndices.push_back(x2);
+            allIndices.push_back(x0 + 1);
+            allIndices.push_back(x2 + 1);
+            numberOfWalls++;
         }
-    }    
+    }
 
-
-    for( unsigned short n=0 ; n<maze->N ; n++ ) {
+    for (auto n = 0; n < maze->N; n++) {
         verticals.push_back(maze->verticalSegments(n));
 
-        int m = maze->M ;
-        unsigned short x0 = m * row_length + n*2 ;
-        unsigned short x1 = x0 + 2 ;
-        unsigned short x2 = x0 + row_length ;
+        auto m = maze->M;
+        auto x0 = m * row_length + n * 2;
+        auto x1 = x0 + 2;
+        auto x2 = x0 + row_length;
 
-        if( maze->isWallInFront( North, m, n ) ) {
-            allIndices.push_back( x0+1 ) ;
-            allIndices.push_back( x0 ) ;
-            allIndices.push_back( x1+1 ) ;
-            allIndices.push_back( x1 ) ;
-            allIndices.push_back( x0 ) ;
-            allIndices.push_back( x1+1 ) ;
-            numberOfWalls++ ;   
-        }            
+        if (maze->isWallInFront(North, m, n)) {
+            allIndices.push_back(x0 + 1);
+            allIndices.push_back(x0);
+            allIndices.push_back(x1 + 1);
+            allIndices.push_back(x1);
+            allIndices.push_back(x0);
+            allIndices.push_back(x1 + 1);
+            numberOfWalls++;
+        }
     }
 
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
 
-    int  success;
+    int success;
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
+    if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                  << infoLog << std::endl;
     }
 
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
+    if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+                  << infoLog << std::endl;
     }
 
     shaderProgram = glCreateProgram();
@@ -288,23 +290,23 @@ void initTriangles() {
     glLinkProgram(shaderProgram);
 
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
+    if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(shaderProgram, 512, nullptr, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKER_FAILED\n" << infoLog << std::endl;
+        std::cerr << "ERROR::PROGRAM::LINKER_FAILED\n"
+                  << infoLog << std::endl;
     }
 
-    glGenBuffers( 1, &VBO ) ;
-    glBindBuffer( GL_ARRAY_BUFFER, VBO ) ;
-    glBufferData( GL_ARRAY_BUFFER, sizeof(float) * allVertices.size(), allVertices.data(), GL_STATIC_DRAW ) ;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * allVertices.size(), allVertices.data(), GL_STATIC_DRAW);
 
-    glGenBuffers( 1, &EBO );
-    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-    glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * allIndices.size(), allIndices.data(), GL_STATIC_DRAW );
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * allIndices.size(), allIndices.data(), GL_STATIC_DRAW);
 
     setCameraPosition();
 }
-
 
 // ----------------------------------------------------------
 // display() Callback function
@@ -320,108 +322,104 @@ void display() {
 
     glUseProgram(shaderProgram);
 
-    GLsizei stride = FloatsPerVertex*sizeof(float) ;
+    GLsizei stride = FloatsPerVertex * sizeof(float);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, nullptr );
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, nullptr);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)) );
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, 3 * TrianglesPerWall * numberOfWalls, GL_UNSIGNED_SHORT, 0);
 
     glUseProgram(0);
-  
+
     // green box
-    glColor4d(0x00,0xff,0x00, 0.1);
-    glLineWidth (2.0);
+    glColor4d(0x00, 0xff, 0x00, 0.1);
+    glLineWidth(2.0);
     glBegin(GL_LINES);
 
     double xr = 1.0 / (2.0 * maze->N);
     double yr = 1.0 / (2.0 * maze->M);
 
-    for(int x = 0 ; x < verticals.size() ; x++) {
-        for(auto vs : verticals[x]) {
-            glVertex2d(0.5+x*yr, 0.95-vs.first*xr);
-            glVertex2d(0.5+x*yr, 0.95-vs.second*xr);
+    for (int x = 0; x < verticals.size(); x++) {
+        for (auto vs : verticals[x]) {
+            glVertex2d(0.51 + x * yr, 0.99 - vs.first * xr);
+            glVertex2d(0.51 + x * yr, 0.99 - vs.second * xr);
         }
     }
-    for(int y = 0 ; y < horizontals.size() ; y++) {
-        for(auto hs : horizontals[y]) {
-            glVertex2d(0.5+hs.first*yr, 0.95-y*xr);
-            glVertex2d(0.5+hs.second*yr, 0.95-y*xr);
+    for (int y = 0; y < horizontals.size(); y++) {
+        for (auto hs : horizontals[y]) {
+            glVertex2d(0.51 + hs.first * yr, 0.99 - y * xr);
+            glVertex2d(0.51 + hs.second * yr, 0.99 - y * xr);
         }
     }
 
     glEnd();
 
-    glColor4d(0xff,0xff,0xff, 0.1);
+    glColor4d(0xff, 0xff, 0xff, 0.1);
     glPointSize(6.0);
     glBegin(GL_POINTS);
-        glVertex2d(0.5+player->getN()*yr, 0.95-player->getM()*xr);
+    glVertex2d(0.51 + player->getN() * yr, 0.99 - player->getM() * xr);
     glEnd();
-
 
     glutSwapBuffers();
 }
-
 
 void setCameraPosition() {
 
     // eye is dead-centre of the cube in which player is standing
     glm::vec3 eye(
-        player->getN() * 10.f + 5.f ,
-        5.f ,
-        player->getM() * 10.f + 5.f );
+        player->getN() * 10.f + 5.f,
+        5.f,
+        player->getM() * 10.f + 5.f);
 
-    glm::vec3 facing(eye.x, 5.f, eye.z );
+    glm::vec3 facing(eye.x, 5.f, eye.z);
     glm::vec3 up(0, 1, 0);
 
-    switch( player->getDirection() ){
-        case North:
-            facing.z -= 10.f ;
-            break ;
-        case South:
-            facing.z += 10.f ;
-            break ;
-        case West:
-            facing.x -= 10.f ;
-            break ;
-        case East:
-            facing.x += 10.f ;
-            break ;
-        default:
-            break ;
+    switch (player->getDirection()) {
+    case North:
+        facing.z -= 10.f;
+        break;
+    case South:
+        facing.z += 10.f;
+        break;
+    case West:
+        facing.x -= 10.f;
+        break;
+    case East:
+        facing.x += 10.f;
+        break;
+    default:
+        break;
     }
 
-    glm::mat4 view = glm::lookAt(eye, facing, up) ;
+    glm::mat4 view = glm::lookAt(eye, facing, up);
 
-    int location = glGetUniformLocation(shaderProgram, "uView" );
-    glProgramUniformMatrix4fv(shaderProgram, location, 1, GL_FALSE, &view[0][0] );
+    int location = glGetUniformLocation(shaderProgram, "uView");
+    glProgramUniformMatrix4fv(shaderProgram, location, 1, GL_FALSE, &view[0][0]);
 
-    cout 
-        << *player << " | "
-        << eye.x << ',' << eye.y << ',' << eye.z << " --> " 
-        << facing.x << ',' << facing.y << ',' << facing.z << "  " 
-        << ( player -> isWallInFront( *maze ) ? "Wall" : "Path" )
-        << endl ;
+    // cout
+    //     << *player << " | "
+    //     << eye.x << ',' << eye.y << ',' << eye.z << " --> "
+    //     << facing.x << ',' << facing.y << ',' << facing.z << "  "
+    //     << ( player -> isWallInFront( *maze ) ? "Wall" : "Path" )
+    //     << endl ;
 }
-
 
 void reshape(int w, int h) {
     glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 
-    const float zNear = .5f ;
-    const float zFar = 150.f ;
-    const float aspect = (GLfloat)w / (GLfloat)h ;
+    constexpr float zNear = .5f;
+    constexpr float zFar = 150.f;
+    const auto aspect = (GLfloat)w / (GLfloat)h;
 
-    float fovRadians = glm::radians( 105.f ) ; // 85' in radians
-    glm::mat4 projection = glm::perspective( fovRadians, aspect, zNear, zFar );
+    const auto fovRadians = glm::radians(105.f); // 85' in radians
+    const auto projection = glm::perspective(fovRadians, aspect, zNear, zFar);
 
-    int location = glGetUniformLocation(shaderProgram, "uProjection" );
-    glProgramUniformMatrix4fv(shaderProgram, location, 1, GL_FALSE, &projection[0][0] );
+    const auto location = glGetUniformLocation(shaderProgram, "uProjection");
+    glProgramUniformMatrix4fv(shaderProgram, location, 1, GL_FALSE, &projection[0][0]);
 }
-
 
 void mousebutton(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
@@ -430,55 +428,43 @@ void mousebutton(int button, int state, int x, int y) {
             prev_y = y;
         }
     }
-
-    if (button == 3) {
-        radius += 0.2f;
-    }
-    if (button == 4) {
-        radius -= 0.2f;
-    }
 }
 
 void mousemove(int x, int y) {
     float dx = (x - prev_x) / 100.f;
     float dy = (y - prev_y) / 100.f;
-    angley = dx;
-    anglex = dy;
 }
 
 void reset() {
-    anglex = 0.f;
-    angley = 0.f;
-    radius = 3.f;
 }
 
 void keyboard(unsigned char key, int x, int y) {
     //-------- reset -------
     if (key == 'r') {
-        player->reset() ;
+        player->reset();
         reset();
     } else if (key == 'q') {
         exit(0);
     }
 
-    setCameraPosition();    // set model view
+    setCameraPosition(); // set model view
     glutPostRedisplay();
 }
 
 void handleSpecialKeypress(int key, int x, int y) {
- switch (key) {
- case GLUT_KEY_LEFT:
-        player->turn(Left) ; 
-  break;
- case GLUT_KEY_RIGHT:
-        player->turn(Right) ;
-  break;
- case GLUT_KEY_UP:
-        player->step(*maze) ;
-  break;
- }
- setCameraPosition();    // set model view
- glutPostRedisplay();
+    switch (key) {
+    case GLUT_KEY_LEFT:
+        player->turn(Left);
+        break;
+    case GLUT_KEY_RIGHT:
+        player->turn(Right);
+        break;
+    case GLUT_KEY_UP:
+        player->step(*maze);
+        break;
+    }
+    setCameraPosition(); // set model view
+    glutPostRedisplay();
 }
 
 void handleSpecialKeyReleased(int key, int x, int y) {

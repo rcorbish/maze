@@ -203,8 +203,8 @@ std::vector<std::pair<int,int>> Maze::verticalSegments( int columnIndex ) {
 std::vector<std::pair<int,int>> Maze::horizontalSegments( int rowIndex ) {
     std::vector<std::pair<int,int>> segments;
 
-    int column = 0;
-    int segmentStart = -1;
+    auto column = 0;
+    auto segmentStart = -1;
 
     while (column < N) {
         if (isWallInFront(East, rowIndex, column)) {

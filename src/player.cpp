@@ -8,7 +8,7 @@ Player::Player( const int _m, const int _n, const Direction _direction )
 }
 
 void Player::move( const Direction direction, const Maze &maze ) {
-    const int cube = maze[m][n] ;
+    const auto cube = maze[m][n] ;
     if( !maze.isWallInFront( direction, m, n ) ) {
         // above also checks for boundaries so we don't need to recheck
         switch( direction ) {
