@@ -37,6 +37,17 @@ constexpr GLsizei TrianglesPerWall = 2;
 vector<vector<pair<int, int>>> verticals;
 vector<vector<pair<int, int>>> horizontals;
 
+void makeVertex( vector<float> &vertices, 
+                const float x, const float y, const float z, 
+                const float r, const float g, const float b) {
+    vertices.push_back(x); 
+    vertices.push_back(y); 
+    vertices.push_back(z); 
+    vertices.push_back(r); 
+    vertices.push_back(g); 
+    vertices.push_back(b); 
+}
+
 void initTriangles() {
 
     constexpr auto vertexShaderSource = "#version 330 core\n"
@@ -81,12 +92,7 @@ void initTriangles() {
             if (b >= 1.f)
                 b -= 1.f;
 
-            allVertices.push_back(10.f * n); // x
-            allVertices.push_back(0.f);      // y
-            allVertices.push_back(10.f * m); // z
-            allVertices.push_back(r);        // color r
-            allVertices.push_back(g);        // color g
-            allVertices.push_back(b);        // color b
+            makeVertex(allVertices, 10.f * n, 0.f, 10.f * m, r, g, b) ;
 
             r += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
             g += (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.5f;
@@ -98,73 +104,23 @@ void initTriangles() {
             if (b >= 1.f)
                 b -= 1.f;
 
-            allVertices.push_back(10.f * n); // x
-            allVertices.push_back(10.f);     // y
-            allVertices.push_back(10.f * m); // z
-            allVertices.push_back(r);        // color
-            allVertices.push_back(g);        // color
-            allVertices.push_back(b);        // color
+            makeVertex(allVertices, 10.f * n, 10.f, 10.f * m, r, g, b) ;
         }
     }
 
     int startOfFloor = numGridPoints * 2;
     // define floor == full plate over floor
-    allVertices.push_back(0.f); // x
-    allVertices.push_back(0.f); // y
-    allVertices.push_back(0.f); // z
-    allVertices.push_back(.2f); // color r
-    allVertices.push_back(.2f); // color g
-    allVertices.push_back(.2f); // color b
+    makeVertex(allVertices, 0.f, 0.f, 0.f, .2f, .2f, .2f) ;
+    makeVertex(allVertices, 10.f * maze->N, 0.f, 0.f, .5f, .5f, .5f) ;
+    makeVertex(allVertices, 10.f * maze->N, 0.f, 10.f * maze->M, .8f, .8f, .8f) ;
+    makeVertex(allVertices, 0.f, 0.f, 10.f * maze->M, .5f, .5f, .5f) ;
 
-    allVertices.push_back(10.f * maze->N); // x
-    allVertices.push_back(0.f);            // y
-    allVertices.push_back(0.f);            // z
-    allVertices.push_back(.5f);            // color r
-    allVertices.push_back(.5f);            // color g
-    allVertices.push_back(.5f);            // color b
-
-    allVertices.push_back(10.f * maze->N); // x
-    allVertices.push_back(0.f);            // y
-    allVertices.push_back(10.f * maze->M); // z
-    allVertices.push_back(.8f);            // color r
-    allVertices.push_back(.8f);            // color g
-    allVertices.push_back(.8f);            // color b
-
-    allVertices.push_back(0);              // x
-    allVertices.push_back(0.f);            // y
-    allVertices.push_back(10.f * maze->M); // z
-    allVertices.push_back(.5f);            // color r
-    allVertices.push_back(.5f);            // color g
-    allVertices.push_back(.5f);            // color b
 
     // define ceiling == full plate over floor
-    allVertices.push_back(0.f);  // x
-    allVertices.push_back(10.f); // y
-    allVertices.push_back(0.f);  // z
-    allVertices.push_back(.2f);  // color r
-    allVertices.push_back(.5f);  // color g
-    allVertices.push_back(.8f);  // color b
-
-    allVertices.push_back(10.f * maze->N); // x
-    allVertices.push_back(10.f);           // y
-    allVertices.push_back(0.f);            // z
-    allVertices.push_back(.2f);            // color r
-    allVertices.push_back(.6f);            // color g
-    allVertices.push_back(.8f);            // color b
-
-    allVertices.push_back(10.f * maze->N); // x
-    allVertices.push_back(10.f);           // y
-    allVertices.push_back(10.f * maze->M); // z
-    allVertices.push_back(.9f);            // color r
-    allVertices.push_back(.9f);            // color g
-    allVertices.push_back(.8f);            // color b
-
-    allVertices.push_back(0);              // x
-    allVertices.push_back(10.f);           // y
-    allVertices.push_back(10.f * maze->M); // z
-    allVertices.push_back(.2f);            // color r
-    allVertices.push_back(.2f);            // color g
-    allVertices.push_back(.8f);            // color b
+    makeVertex(allVertices, 0.f, 10.f, 0.f, .2f, .5f, .8f) ;
+    makeVertex(allVertices, 10.f * maze->N, 10.f, 0.f, .2f, .6f, .8f) ;
+    makeVertex(allVertices, 10.f * maze->N, 10.f, 10.f * maze->M, .9f, .9f, .8f) ;
+    makeVertex(allVertices, 0.f, 10.f, 10.f * maze->M, .2f, .2f, .8f) ;
 
     //
     //   Defines points for East-West wall and North-South wall
